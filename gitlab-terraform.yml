@@ -1,0 +1,58 @@
+image: hashicorp/terraform:light
+
+variables:
+  S3_BUCKET: cd-upload-bucket
+
+before_script:
+  - rm -rf .terraform
+  - terraform --version
+  - terraform init
+
+stages:
+  - validate
+  - plan
+  - apply
+  - destroy
+
+validate:
+  stage: validate
+  script:
+    - terraform validate
+  tags:
+    - prism-infra
+  only:
+    - apply
+
+plan:
+  stage: plan
+  script:
+    - terraform plan -out "planfile"
+  dependencies:
+    - validate
+  artifacts:
+    paths:
+      - planfile
+  tags:
+    - prism-infra
+  only:
+    - apply
+
+apply:
+  stage: apply
+  script:
+    - terraform apply -input=false "planfile"
+  dependencies:
+    - plan
+  tags:
+    - prism-infra
+  only:
+    - apply
+
+destroy:
+  stage: destroy
+  script:
+    - terraform destroy
+  only: 
+    - destroy
+  tags:
+    - prism-infra

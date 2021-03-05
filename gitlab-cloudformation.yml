@@ -1,0 +1,27 @@
+image: amazon/aws-sam-cli-build-image-python3.8
+
+variables:
+  HANDLER: handler
+  
+stages:
+  - deploy
+
+update_lambda:
+  stage: deploy
+  script:
+    - |
+      sam build --template-file template.yaml
+      sam package --region ap-northeast-1 --resolve-s3
+      sam deploy \
+          --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
+          --region ap-northeast-1 \
+          --stack-name $BRANCH-migration \
+          --resolve-s3 \
+          --parameter-overrides Handler=${HANDLER}
+  only:
+    - test
+    - qa
+    - stag
+    - prep
+    - prod
+    - cust
